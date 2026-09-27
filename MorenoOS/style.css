@@ -1,0 +1,1016 @@
+let zIndex = 20;
+let windowCount = 0;
+
+const applications = {
+
+    explorer: {
+        name: "Arquivos",
+        icon: "📁"
+    },
+
+    browser: {
+        name: "Moreno Browser",
+        icon: "🌐"
+    },
+
+    terminal: {
+        name: "Terminal",
+        icon: "▣"
+    },
+
+    calculator: {
+        name: "Calculadora",
+        icon: "🧮"
+    },
+
+    notes: {
+        name: "Notas",
+        icon: "📝"
+    },
+
+    settings: {
+        name: "Configurações",
+        icon: "⚙️"
+    }
+
+};
+
+
+/* =========================
+   ABRIR APLICATIVO
+========================= */
+
+function openApp(id) {
+
+    closeStart();
+
+    const app = applications[id];
+
+    if (!app) return;
+
+    const win = document.createElement("div");
+
+    win.className = "window active";
+
+    win.dataset.app = id;
+
+    win.style.left = (100 + windowCount * 25) + "px";
+    win.style.top = (70 + windowCount * 25) + "px";
+
+    win.style.zIndex = ++zIndex;
+
+    windowCount++;
+
+    win.innerHTML = `
+
+        <div class="window-titlebar">
+
+            <div class="window-title">
+                ${app.icon} ${app.name}
+            </div>
+
+            <div class="window-controls">
+
+                <button onclick="minimizeWindow(this)">
+                    −
+                </button>
+
+                <button onclick="maximizeWindow(this)">
+                    □
+                </button>
+
+                <button onclick="closeWindow(this)">
+                    ×
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="window-content">
+            ${getContent(id)}
+        </div>
+
+    `;
+
+    document.getElementById("windows").appendChild(win);
+
+    setupWindow(win);
+
+    if (id === "terminal") {
+        setupTerminal(win);
+    }
+
+    if (id === "notes") {
+        setupNotes(win);
+    }
+
+    updateTasks();
+}
+
+
+/* =========================
+   CONTEÚDO DOS APLICATIVOS
+========================= */
+
+function getContent(id) {
+
+    if (id === "browser") {
+
+        return `
+
+            <div class="browser">
+
+                <div class="browser-toolbar">
+
+                    <button onclick="browserBack()">
+                        ←
+                    </button>
+
+                    <button onclick="browserForward()">
+                        →
+                    </button>
+
+                    <button onclick="browserReload()">
+                        ↻
+                    </button>
+
+                    <input
+                        class="browser-url"
+                        id="browserUrl"
+                        placeholder="Digite um endereço..."
+                        value="https://www.google.com"
+                        onkeydown="browserKey(event)"
+                    >
+
+                    <button onclick="openBrowserUrl()">
+                        Ir
+                    </button>
+
+                </div>
+
+                <iframe
+                    id="browserFrame"
+                    class="browser-frame"
+                    src="https://www.google.com"
+                    allow="fullscreen"
+                ></iframe>
+
+            </div>
+
+        `;
+    }
+
+
+    if (id === "explorer") {
+
+        return `
+
+            <div class="explorer">
+
+                <h2>Este Computador</h2>
+
+                <div class="file-grid">
+
+                    <div class="file">
+                        <div class="file-icon">💽</div>
+                        <div class="file-name">Disco Local (C:)</div>
+                    </div>
+
+                    <div class="file">
+                        <div class="file-icon">📁</div>
+                        <div class="file-name">Documentos</div>
+                    </div>
+
+                    <div class="file">
+                        <div class="file-icon">📷</div>
+                        <div class="file-name">Imagens</div>
+                    </div>
+
+                    <div class="file">
+                        <div class="file-icon">🎵</div>
+                        <div class="file-name">Músicas</div>
+                    </div>
+
+                    <div class="file">
+                        <div class="file-icon">🎮</div>
+                        <div class="file-name">Jogos</div>
+                    </div>
+
+                    <div
+                        class="file"
+                        ondblclick="execute('Sistema.exe')"
+                    >
+                        <div class="file-icon">⚙️</div>
+                        <div class="file-name">Sistema.exe</div>
+                    </div>
+
+                    <div
+                        class="file"
+                        ondblclick="execute('Browser.exe')"
+                    >
+                        <div class="file-icon">🌐</div>
+                        <div class="file-name">Browser.exe</div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+    }
+
+
+    if (id === "terminal") {
+
+        return `
+
+            <div class="terminal">
+
+                <div id="terminalOutput">
+                    Moreno OS Terminal<br>
+                    Digite <b>help</b> para ver os comandos.
+                    <br><br>
+                </div>
+
+                <div>
+                    <span>user@moreno-os:~$ </span>
+
+                    <input
+                        class="terminal-input"
+                        id="terminalInput"
+                        autocomplete="off"
+                    >
+
+                </div>
+
+            </div>
+
+        `;
+    }
+
+
+    if (id === "calculator") {
+
+        return `
+
+            <div class="calculator">
+
+                <input
+                    id="calcDisplay"
+                    class="calc-display"
+                    readonly
+                >
+
+                <div class="calc-grid">
+
+                    <button onclick="calcPress('7')">7</button>
+                    <button onclick="calcPress('8')">8</button>
+                    <button onclick="calcPress('9')">9</button>
+                    <button onclick="calcPress('/')">÷</button>
+
+                    <button onclick="calcPress('4')">4</button>
+                    <button onclick="calcPress('5')">5</button>
+                    <button onclick="calcPress('6')">6</button>
+                    <button onclick="calcPress('*')">×</button>
+
+                    <button onclick="calcPress('1')">1</button>
+                    <button onclick="calcPress('2')">2</button>
+                    <button onclick="calcPress('3')">3</button>
+                    <button onclick="calcPress('-')">−</button>
+
+                    <button onclick="calcPress('0')">0</button>
+                    <button onclick="calcPress('.')">.</button>
+                    <button onclick="calculate()">=</button>
+                    <button onclick="calcPress('+')">+</button>
+
+                    <button onclick="clearCalc()">C</button>
+
+                </div>
+
+            </div>
+
+        `;
+    }
+
+
+    if (id === "notes") {
+
+        return `
+
+            <textarea
+                class="notes"
+                id="notesArea"
+                placeholder="Digite suas anotações..."
+            ></textarea>
+
+        `;
+    }
+
+
+    if (id === "settings") {
+
+        return `
+
+            <div style="padding:25px">
+
+                <h2>⚙️ Configurações</h2>
+
+                <p>Moreno OS</p>
+
+                <hr>
+
+                <p>
+                    Sistema: Moreno OS
+                </p>
+
+                <p>
+                    Versão: 1.0
+                </p>
+
+                <p>
+                    Arquitetura: Web x64
+                </p>
+
+                <button onclick="notify('Sistema atualizado!')">
+                    Procurar atualizações
+                </button>
+
+            </div>
+
+        `;
+    }
+
+    return "";
+}
+
+
+/* =========================
+   NAVEGADOR
+========================= */
+
+function browserKey(event) {
+
+    if (event.key === "Enter") {
+        openBrowserUrl();
+    }
+
+}
+
+
+function openBrowserUrl() {
+
+    const input = document.querySelector(
+        ".window[data-app='browser'] .browser-url"
+    );
+
+    const frame = document.querySelector(
+        ".window[data-app='browser'] .browser-frame"
+    );
+
+    if (!input || !frame) return;
+
+    let url = input.value.trim();
+
+    if (!url) return;
+
+    /*
+       Se o usuário escrever:
+
+       google.com
+
+       transforma em:
+
+       https://google.com
+    */
+
+    if (!/^https?:\/\//i.test(url)) {
+        url = "https://" + url;
+    }
+
+    input.value = url;
+
+    frame.src = url;
+
+    notify("Abrindo " + url);
+
+}
+
+
+function browserReload() {
+
+    const frame = document.querySelector(
+        ".window[data-app='browser'] .browser-frame"
+    );
+
+    if (frame) {
+        frame.src = frame.src;
+    }
+
+}
+
+
+function browserBack() {
+
+    const frame = document.querySelector(
+        ".window[data-app='browser'] .browser-frame"
+    );
+
+    try {
+        frame.contentWindow.history.back();
+    } catch {
+        notify("Não foi possível voltar nesta página.");
+    }
+
+}
+
+
+function browserForward() {
+
+    const frame = document.querySelector(
+        ".window[data-app='browser'] .browser-frame"
+    );
+
+    try {
+        frame.contentWindow.history.forward();
+    } catch {
+        notify("Não foi possível avançar.");
+    }
+
+}
+
+
+/* =========================
+   JANELAS
+========================= */
+
+function setupWindow(win) {
+
+    const titlebar = win.querySelector(".window-titlebar");
+
+    let dragging = false;
+
+    let offsetX = 0;
+    let offsetY = 0;
+
+
+    titlebar.addEventListener("mousedown", function(e) {
+
+        dragging = true;
+
+        offsetX = e.clientX - win.offsetLeft;
+        offsetY = e.clientY - win.offsetTop;
+
+        focusWindow(win);
+
+    });
+
+
+    document.addEventListener("mousemove", function(e) {
+
+        if (!dragging) return;
+
+        win.style.left =
+            Math.max(0, e.clientX - offsetX) + "px";
+
+        win.style.top =
+            Math.max(0, e.clientY - offsetY) + "px";
+
+    });
+
+
+    document.addEventListener("mouseup", function() {
+        dragging = false;
+    });
+
+
+    win.addEventListener("mousedown", function() {
+        focusWindow(win);
+    });
+
+}
+
+
+function focusWindow(win) {
+
+    document.querySelectorAll(".window")
+        .forEach(w => w.classList.remove("active"));
+
+    win.classList.add("active");
+
+    win.style.zIndex = ++zIndex;
+
+}
+
+
+function closeWindow(button) {
+
+    const win = button.closest(".window");
+
+    win.remove();
+
+    updateTasks();
+
+}
+
+
+function minimizeWindow(button) {
+
+    const win = button.closest(".window");
+
+    win.style.display = "none";
+
+}
+
+
+function maximizeWindow(button) {
+
+    const win = button.closest(".window");
+
+    if (win.dataset.maximized === "true") {
+
+        win.style.left = win.dataset.oldLeft;
+        win.style.top = win.dataset.oldTop;
+        win.style.width = win.dataset.oldWidth;
+        win.style.height = win.dataset.oldHeight;
+
+        win.dataset.maximized = "false";
+
+    } else {
+
+        win.dataset.oldLeft = win.style.left;
+        win.dataset.oldTop = win.style.top;
+        win.dataset.oldWidth = win.style.width;
+        win.dataset.oldHeight = win.style.height;
+
+        win.style.left = "0";
+        win.style.top = "0";
+        win.style.width = "100%";
+        win.style.height = "calc(100% - 55px)";
+
+        win.dataset.maximized = "true";
+
+    }
+
+}
+
+
+/* =========================
+   TASKBAR
+========================= */
+
+function updateTasks() {
+
+    const tasks = document.getElementById("taskButtons");
+
+    tasks.innerHTML = "";
+
+    document.querySelectorAll(".window").forEach((win, index) => {
+
+        const id = win.dataset.app;
+
+        const button = document.createElement("button");
+
+        button.className = "task-button";
+
+        button.textContent =
+            applications[id].icon +
+            " " +
+            applications[id].name;
+
+        button.onclick = () => {
+
+            if (win.style.display === "none") {
+
+                win.style.display = "block";
+
+            }
+
+            focusWindow(win);
+
+        };
+
+        tasks.appendChild(button);
+
+    });
+
+}
+
+
+/* =========================
+   MENU INICIAR
+========================= */
+
+function toggleStart() {
+
+    document
+        .getElementById("startMenu")
+        .classList.toggle("show");
+
+    renderApps();
+
+}
+
+
+function closeStart() {
+
+    document
+        .getElementById("startMenu")
+        .classList.remove("show");
+
+}
+
+
+function renderApps(filter = "") {
+
+    const list = document.getElementById("appList");
+
+    list.innerHTML = "";
+
+    Object.entries(applications).forEach(([id, app]) => {
+
+        if (
+            filter &&
+            !app.name.toLowerCase().includes(filter.toLowerCase())
+        ) {
+            return;
+        }
+
+        const item = document.createElement("div");
+
+        item.className = "start-app";
+
+        item.innerHTML =
+            app.icon + " " + app.name;
+
+        item.onclick = () => openApp(id);
+
+        list.appendChild(item);
+
+    });
+
+}
+
+
+function searchApps(value) {
+
+    renderApps(value);
+
+}
+
+
+/* =========================
+   TERMINAL
+========================= */
+
+function setupTerminal(win) {
+
+    const input = win.querySelector("#terminalInput");
+
+    input.focus();
+
+    input.addEventListener("keydown", function(e) {
+
+        if (e.key !== "Enter") return;
+
+        const command = input.value.trim();
+
+        input.value = "";
+
+        terminalCommand(command, win);
+
+    });
+
+}
+
+
+function terminalCommand(command, win) {
+
+    const output = win.querySelector("#terminalOutput");
+
+    output.innerHTML +=
+        `<div>user@moreno-os:~$ ${command}</div>`;
+
+    switch(command.toLowerCase()) {
+
+        case "help":
+
+            output.innerHTML += `
+                Comandos:<br>
+                help<br>
+                ls<br>
+                pwd<br>
+                whoami<br>
+                date<br>
+                time<br>
+                version<br>
+                systeminfo<br>
+                open<br>
+                calc<br>
+                clear<br>
+                reboot<br>
+                shutdown<br><br>
+            `;
+
+            break;
+
+
+        case "ls":
+
+            output.innerHTML += `
+                Desktop<br>
+                Documents<br>
+                Downloads<br>
+                Games<br>
+                Sistema.exe<br>
+                Browser.exe<br><br>
+            `;
+
+            break;
+
+
+        case "pwd":
+
+            output.innerHTML +=
+                `/home/user<br><br>`;
+
+            break;
+
+
+        case "whoami":
+
+            output.innerHTML +=
+                `user<br><br>`;
+
+            break;
+
+
+        case "date":
+
+            output.innerHTML +=
+                new Date().toLocaleDateString() +
+                "<br><br>";
+
+            break;
+
+
+        case "time":
+
+            output.innerHTML +=
+                new Date().toLocaleTimeString() +
+                "<br><br>";
+
+            break;
+
+
+        case "version":
+
+            output.innerHTML +=
+                `Moreno OS 1.0<br><br>`;
+
+            break;
+
+
+        case "systeminfo":
+
+            output.innerHTML += `
+                Sistema: Moreno OS<br>
+                Arquitetura: x64<br>
+                Navegador: Web Engine<br>
+                Memória: Virtual<br>
+                Processador: Virtual CPU<br><br>
+            `;
+
+            break;
+
+
+        case "open":
+
+            openApp("browser");
+
+            break;
+
+
+        case "calc":
+
+            openApp("calculator");
+
+            break;
+
+
+        case "clear":
+
+            output.innerHTML = "";
+
+            break;
+
+
+        case "reboot":
+
+            location.reload();
+
+            break;
+
+
+        case "shutdown":
+
+            output.innerHTML +=
+                "Sistema desligado.<br>";
+
+            break;
+
+
+        case "":
+
+            break;
+
+
+        default:
+
+            output.innerHTML +=
+                `Comando não encontrado: ${command}<br><br>`;
+
+    }
+
+}
+
+
+/* =========================
+   CALCULADORA
+========================= */
+
+function calcPress(value) {
+
+    const display =
+        document.getElementById("calcDisplay");
+
+    if (display) {
+        display.value += value;
+    }
+
+}
+
+
+function calculate() {
+
+    const display =
+        document.getElementById("calcDisplay");
+
+    try {
+
+        display.value =
+            Function(
+                `"use strict"; return (${display.value})`
+            )();
+
+    } catch {
+
+        display.value = "Erro";
+
+    }
+
+}
+
+
+function clearCalc() {
+
+    const display =
+        document.getElementById("calcDisplay");
+
+    display.value = "";
+
+}
+
+
+/* =========================
+   NOTAS
+========================= */
+
+function setupNotes(win) {
+
+    const area = win.querySelector("#notesArea");
+
+    area.value =
+        localStorage.getItem("morenoNotes") || "";
+
+    area.addEventListener("input", function() {
+
+        localStorage.setItem(
+            "morenoNotes",
+            area.value
+        );
+
+    });
+
+}
+
+
+/* =========================
+   EXECUTÁVEIS
+========================= */
+
+function execute(name) {
+
+    if (name === "Sistema.exe") {
+
+        openApp("settings");
+
+        notify("Sistema.exe executado.");
+
+    }
+
+    if (name === "Browser.exe") {
+
+        openApp("browser");
+
+        notify("Browser.exe executado.");
+
+    }
+
+}
+
+
+/* =========================
+   RELÓGIO
+========================= */
+
+function updateClock() {
+
+    const clock =
+        document.getElementById("clock");
+
+    if (!clock) return;
+
+    clock.textContent =
+        new Date().toLocaleTimeString(
+            "pt-BR",
+            {
+                hour: "2-digit",
+                minute: "2-digit"
+            }
+        );
+
+}
+
+setInterval(updateClock, 1000);
+
+updateClock();
+
+
+/* =========================
+   CPU SIMULADA
+========================= */
+
+setInterval(() => {
+
+    const cpu =
+        document.getElementById("cpu");
+
+    const value =
+        Math.floor(Math.random() * 40) + 5;
+
+    cpu.textContent =
+        `CPU ${value}%`;
+
+}, 1500);
+
+
+/* =========================
+   NOTIFICAÇÕES
+========================= */
+
+function notify(text) {
+
+    const notification =
+        document.getElementById("notification");
+
+    notification.textContent = text;
+
+    notification.classList.add("show");
+
+    setTimeout(() => {
+
+        notification.classList.remove("show");
+
+    }, 2500);
+
+}
+
+
+/* =========================
+   ATALHO TERMINAL
+========================= */
+
+document.addEventListener("keydown", function(e) {
+
+    if (
+        e.ctrlKey &&
+        e.altKey &&
+        e.key.toLowerCase() === "t"
+    ) {
+
+        openApp("terminal");
+
+    }
+
+});
