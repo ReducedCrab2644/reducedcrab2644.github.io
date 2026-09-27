@@ -1,0 +1,2661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moreno OS</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    user-select:none;
+}
+
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Segoe UI,Arial,sans-serif;
+    background:#101014;
+    color:#fff;
+}
+
+button,input,textarea{
+    font-family:inherit;
+}
+
+#desktop{
+    position:relative;
+    width:100%;
+    height:100vh;
+    overflow:hidden;
+    background:
+        radial-gradient(circle at 20% 20%,rgba(120,100,255,.20),transparent 35%),
+        radial-gradient(circle at 80% 70%,rgba(0,180,255,.13),transparent 35%),
+        linear-gradient(135deg,#090b13,#151525 50%,#08090e);
+}
+
+#desktop::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+        linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:40px 40px;
+    pointer-events:none;
+}
+
+.wallpaper-logo{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    font-size:clamp(50px,10vw,150px);
+    font-weight:800;
+    letter-spacing:10px;
+    color:rgba(255,255,255,.035);
+    pointer-events:none;
+}
+
+#taskbar{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:58px;
+    z-index:99999;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 10px;
+    background:rgba(13,14,21,.88);
+    backdrop-filter:blur(20px);
+    border-top:1px solid rgba(255,255,255,.1);
+}
+
+#startButton{
+    width:45px;
+    height:43px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:10px;
+    background:rgba(255,255,255,.07);
+    color:white;
+    font-size:22px;
+    cursor:pointer;
+}
+
+#startButton:hover{
+    background:rgba(130,110,255,.3);
+}
+
+#taskApps{
+    display:flex;
+    gap:5px;
+    flex:1;
+    overflow:hidden;
+}
+
+.task-app{
+    min-width:125px;
+    max-width:180px;
+    height:43px;
+    padding:0 12px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:9px;
+    background:rgba(255,255,255,.055);
+    color:#ddd;
+    cursor:pointer;
+    text-align:left;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.task-app:hover{
+    background:rgba(255,255,255,.12);
+}
+
+#clock{
+    min-width:115px;
+    text-align:center;
+    color:#ddd;
+    font-size:13px;
+}
+
+#startMenu{
+    position:absolute;
+    left:10px;
+    bottom:68px;
+    width:min(520px,calc(100vw - 20px));
+    max-height:calc(100vh - 90px);
+    overflow:auto;
+    z-index:99998;
+    padding:18px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;
+    background:rgba(16,17,26,.94);
+    backdrop-filter:blur(25px);
+    box-shadow:0 25px 70px rgba(0,0,0,.55);
+    display:none;
+}
+
+#startMenu.open{
+    display:block;
+}
+
+.start-title{
+    font-size:23px;
+    font-weight:700;
+    margin-bottom:15px;
+}
+
+#appSearch{
+    width:100%;
+    padding:12px 14px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:10px;
+    outline:none;
+    background:#0d0e15;
+    color:white;
+    margin-bottom:15px;
+}
+
+.app-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:9px;
+}
+
+.app-button{
+    min-height:82px;
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:12px;
+    background:rgba(255,255,255,.055);
+    color:#eee;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+}
+
+.app-button:hover{
+    background:rgba(125,110,255,.25);
+    transform:translateY(-1px);
+}
+
+.app-icon{
+    font-size:26px;
+}
+
+.app-name{
+    font-size:12px;
+}
+
+.window{
+    position:absolute;
+    width:680px;
+    height:450px;
+    min-width:320px;
+    min-height:220px;
+    left:calc(50% - 340px);
+    top:calc(50% - 255px);
+    display:none;
+    flex-direction:column;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.13);
+    border-radius:13px;
+    background:rgba(19,20,29,.95);
+    backdrop-filter:blur(20px);
+    box-shadow:0 25px 70px rgba(0,0,0,.55);
+}
+
+.window.active{
+    display:flex;
+}
+
+.window.maximized{
+    left:0!important;
+    top:0!important;
+    width:100%!important;
+    height:calc(100% - 58px)!important;
+    border-radius:0;
+}
+
+.titlebar{
+    height:42px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    padding-left:14px;
+    background:rgba(255,255,255,.055);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    cursor:grab;
+}
+
+.titlebar:active{
+    cursor:grabbing;
+}
+
+.title{
+    flex:1;
+    font-size:14px;
+    font-weight:600;
+}
+
+.window-buttons{
+    display:flex;
+    height:100%;
+}
+
+.window-buttons button{
+    width:42px;
+    border:0;
+    background:transparent;
+    color:#bbb;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.window-buttons button:hover{
+    background:rgba(255,255,255,.1);
+}
+
+.window-buttons .close:hover{
+    background:#d64545;
+    color:white;
+}
+
+.window-content{
+    flex:1;
+    overflow:auto;
+    min-height:0;
+}
+
+/* EXPLORER */
+
+.explorer{
+    height:100%;
+    display:flex;
+}
+
+.sidebar{
+    width:165px;
+    flex-shrink:0;
+    border-right:1px solid rgba(255,255,255,.08);
+    padding:12px;
+}
+
+.side-item{
+    padding:10px;
+    border-radius:8px;
+    cursor:pointer;
+    color:#bbb;
+    font-size:13px;
+    margin-bottom:4px;
+}
+
+.side-item:hover{
+    background:rgba(255,255,255,.08);
+    color:white;
+}
+
+.files-area{
+    flex:1;
+    padding:15px;
+    overflow:auto;
+}
+
+.pathbar{
+    display:flex;
+    gap:8px;
+    margin-bottom:15px;
+}
+
+.pathbar input{
+    flex:1;
+    padding:9px;
+    border-radius:7px;
+    border:1px solid #333;
+    background:#0c0d12;
+    color:white;
+}
+
+.file-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+    gap:10px;
+}
+
+.file{
+    min-height:100px;
+    padding:12px;
+    border-radius:10px;
+    cursor:pointer;
+    text-align:center;
+    border:1px solid transparent;
+}
+
+.file:hover{
+    background:rgba(100,90,255,.15);
+    border-color:rgba(140,130,255,.2);
+}
+
+.file-icon{
+    font-size:38px;
+    margin-bottom:8px;
+}
+
+.file-name{
+    font-size:12px;
+    word-break:break-word;
+}
+
+/* TERMINAL */
+
+.terminal{
+    height:100%;
+    padding:14px;
+    background:#07090c;
+    color:#d5f5d5;
+    font-family:Consolas,monospace;
+    font-size:13px;
+    display:flex;
+    flex-direction:column;
+}
+
+.terminal-output{
+    flex:1;
+    overflow:auto;
+    white-space:pre-wrap;
+}
+
+.terminal-line{
+    display:flex;
+    gap:7px;
+}
+
+.terminal-input{
+    flex:1;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#fff;
+    font-family:Consolas,monospace;
+}
+
+/* BROWSER */
+
+.browser{
+    height:100%;
+    display:flex;
+    flex-direction:column;
+}
+
+.browser-toolbar{
+    padding:9px;
+    display:flex;
+    gap:7px;
+    background:rgba(255,255,255,.04);
+}
+
+.browser-toolbar input{
+    flex:1;
+    padding:9px;
+    background:#0c0d13;
+    color:white;
+    border:1px solid #333;
+    border-radius:7px;
+    outline:none;
+}
+
+.browser-toolbar button,
+.small-button{
+    padding:8px 12px;
+    border:0;
+    border-radius:7px;
+    background:#5149a5;
+    color:white;
+    cursor:pointer;
+}
+
+.browser-page{
+    flex:1;
+    padding:30px;
+    overflow:auto;
+}
+
+.browser-home{
+    max-width:700px;
+    margin:auto;
+}
+
+.browser-home h1{
+    font-size:40px;
+}
+
+.browser-card{
+    display:inline-block;
+    width:180px;
+    padding:18px;
+    margin:5px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:12px;
+}
+
+/* CALCULATOR */
+
+.calculator{
+    height:100%;
+    padding:15px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.calc-display{
+    width:100%;
+    height:70px;
+    padding:12px;
+    border:1px solid #333;
+    border-radius:10px;
+    background:#08090d;
+    color:white;
+    text-align:right;
+    font-size:30px;
+    outline:none;
+}
+
+.calc-buttons{
+    flex:1;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+}
+
+.calc-buttons button{
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:9px;
+    background:#191a24;
+    color:white;
+    font-size:18px;
+    cursor:pointer;
+}
+
+.calc-buttons button:hover{
+    background:#30314a;
+}
+
+.calc-buttons .operator{
+    background:#34305f;
+}
+
+/* NOTES */
+
+.notes{
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    padding:12px;
+    gap:10px;
+}
+
+.notes textarea{
+    flex:1;
+    resize:none;
+    border:1px solid #333;
+    border-radius:9px;
+    padding:13px;
+    background:#090a0e;
+    color:white;
+    outline:none;
+}
+
+/* MONITOR */
+
+.monitor{
+    padding:18px;
+}
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+}
+
+.stat{
+    padding:16px;
+    background:rgba(255,255,255,.05);
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.07);
+}
+
+.stat-value{
+    font-size:28px;
+    font-weight:bold;
+    margin-top:8px;
+}
+
+.progress{
+    height:7px;
+    background:#292a31;
+    border-radius:10px;
+    overflow:hidden;
+    margin-top:10px;
+}
+
+.progress div{
+    height:100%;
+    width:30%;
+    background:#766cff;
+    transition:.3s;
+}
+
+.process-table{
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+}
+
+.process-table th,
+.process-table td{
+    padding:8px;
+    border-bottom:1px solid rgba(255,255,255,.07);
+    text-align:left;
+}
+
+/* SETTINGS */
+
+.settings{
+    padding:20px;
+}
+
+.setting-section{
+    margin-bottom:22px;
+    padding-bottom:18px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.wallpapers{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.wallpaper-choice{
+    width:110px;
+    height:65px;
+    border:2px solid transparent;
+    border-radius:9px;
+    cursor:pointer;
+}
+
+.wallpaper-choice:hover{
+    border-color:white;
+}
+
+.w1{background:linear-gradient(135deg,#090b13,#31306c);}
+.w2{background:linear-gradient(135deg,#190b0b,#6b2727);}
+.w3{background:linear-gradient(135deg,#061719,#16606b);}
+.w4{background:linear-gradient(135deg,#1b1007,#795018);}
+.w5{background:linear-gradient(135deg,#13051e,#522071);}
+
+/* TRASH */
+
+.trash{
+    padding:20px;
+}
+
+.empty-trash{
+    text-align:center;
+    padding:70px 10px;
+    color:#888;
+    font-size:18px;
+}
+
+/* CONTEXT MENU */
+
+#contextMenu{
+    position:absolute;
+    width:210px;
+    display:none;
+    z-index:100000;
+    padding:6px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:10px;
+    background:rgba(20,21,29,.96);
+    box-shadow:0 15px 40px rgba(0,0,0,.5);
+}
+
+.context-item{
+    padding:10px;
+    border-radius:7px;
+    cursor:pointer;
+    font-size:13px;
+}
+
+.context-item:hover{
+    background:#343052;
+}
+
+/* NOTIFICATIONS */
+
+#notifications{
+    position:absolute;
+    right:15px;
+    bottom:72px;
+    z-index:100001;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    pointer-events:none;
+}
+
+.notification{
+    width:280px;
+    padding:14px;
+    border-radius:12px;
+    background:rgba(20,21,30,.95);
+    border:1px solid rgba(255,255,255,.1);
+    box-shadow:0 10px 35px rgba(0,0,0,.4);
+    animation:notificationIn .25s ease;
+}
+
+@keyframes notificationIn{
+    from{transform:translateX(30px);opacity:0}
+    to{transform:translateX(0);opacity:1}
+}
+
+/* LOCK */
+
+#lockScreen{
+    position:absolute;
+    inset:0;
+    z-index:200000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    background:rgba(5,6,10,.96);
+    backdrop-filter:blur(25px);
+}
+
+#lockScreen.show{
+    display:flex;
+}
+
+.lock-logo{
+    font-size:60px;
+    font-weight:800;
+    letter-spacing:7px;
+    margin-bottom:20px;
+}
+
+.lock-time{
+    font-size:65px;
+    font-weight:200;
+}
+
+#unlockButton{
+    margin-top:25px;
+    padding:12px 28px;
+    border:0;
+    border-radius:9px;
+    background:#6159ca;
+    color:white;
+    cursor:pointer;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:700px){
+    .window{
+        width:calc(100vw - 12px);
+        height:calc(100vh - 70px);
+        left:6px;
+        top:6px;
+    }
+
+    .sidebar{
+        width:125px;
+    }
+
+    .app-grid{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .stats-grid{
+        grid-template-columns:1fr;
+    }
+
+    .task-app{
+        min-width:50px;
+    }
+
+    #clock{
+        min-width:75px;
+        font-size:10px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="desktop">
+
+    <div class="wallpaper-logo">MORENO</div>
+
+    <!-- START MENU -->
+    <div id="startMenu">
+
+        <div class="start-title">Moreno OS</div>
+
+        <input id="appSearch" type="text" placeholder="Pesquisar aplicativos...">
+
+        <div class="app-grid">
+
+            <button class="app-button" data-app="explorer">
+                <span class="app-icon">📁</span>
+                <span class="app-name" data-i18n="files">Arquivos</span>
+            </button>
+
+            <button class="app-button" data-app="terminal">
+                <span class="app-icon">▣</span>
+                <span class="app-name" data-i18n="terminal">Terminal</span>
+            </button>
+
+            <button class="app-button" data-app="browser">
+                <span class="app-icon">🌐</span>
+                <span class="app-name" data-i18n="browser">Navegador</span>
+            </button>
+
+            <button class="app-button" data-app="calculator">
+                <span class="app-icon">🧮</span>
+                <span class="app-name" data-i18n="calculator">Calculadora</span>
+            </button>
+
+            <button class="app-button" data-app="notes">
+                <span class="app-icon">📝</span>
+                <span class="app-name" data-i18n="notes">Notas</span>
+            </button>
+
+            <button class="app-button" data-app="monitor">
+                <span class="app-icon">📊</span>
+                <span class="app-name" data-i18n="monitor">Monitor</span>
+            </button>
+
+            <button class="app-button" data-app="settings">
+                <span class="app-icon">⚙️</span>
+                <span class="app-name" data-i18n="settings">Configurações</span>
+            </button>
+
+            <button class="app-button" data-app="trash">
+                <span class="app-icon">🗑️</span>
+                <span class="app-name" data-i18n="trash">Lixeira</span>
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- FILE EXPLORER -->
+    <div class="window" id="window-explorer">
+
+        <div class="titlebar">
+            <div class="title">📁 Arquivos</div>
+
+            <div class="window-buttons">
+                <button class="minimize">−</button>
+                <button class="maximize">□</button>
+                <button class="close">×</button>
+            </div>
+        </div>
+
+        <div class="window-content">
+
+            <div class="explorer">
+
+                <div class="sidebar">
+
+                    <div class="side-item">🏠 Início</div>
+                    <div class="side-item">💻 Computador</div>
+                    <div class="side-item">📄 Documentos</div>
+                    <div class="side-item">🖼️ Imagens</div>
+                    <div class="side-item">🎵 Música</div>
+                    <div class="side-item">📥 Downloads</div>
+
+                </div>
+
+                <div class="files-area">
+
+                    <div class="pathbar">
+                        <input value="C:\Users\Moreno" readonly>
+                    </div>
+
+                    <div class="file-grid">
+
+                        <div class="file">
+                            <div class="file-icon">📁</div>
+                            <div class="file-name">Documentos</div>
+                        </div>
+
+                        <div class="file">
+                            <div class="file-icon">📁</div>
+                            <div class="file-name">Downloads</div>
+                        </div>
+
+                        <div class="file">
+                            <div class="file-icon">📁</div>
+                            <div class="file-name">Projetos</div>
+                        </div>
+
+                        <div class="file">
+                            <div class="file-icon">📁</div>
+                            <div class="file-name">Imagens</div>
+                        </div>
+
+                        <div class="file">
+                            <div class="file-icon">📄</div>
+                            <div class="file-name">README.txt</div>
+                        </div>
+
+                        <div class="file">
+                            <div class="file-icon">⚙️</div>
+                            <div class="file-name">config.moreno</div>
+                        </div>
+
+                        <div class="file">
+                            <div class="file-icon">🧩</div>
+                            <div class="file-name">system.dll</div>
+                        </div>
+
+                        <div class="file">
+                            <div class="file-icon">💾</div>
+                            <div class="file-name">backup.mor</div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- TERMINAL -->
+    <div class="window" id="window-terminal">
+
+        <div class="titlebar">
+
+            <div class="title">▣ Terminal</div>
+
+            <div class="window-buttons">
+                <button class="minimize">−</button>
+                <button class="maximize">□</button>
+                <button class="close">×</button>
+            </div>
+
+        </div>
+
+        <div class="window-content">
+
+            <div class="terminal">
+
+                <div class="terminal-output" id="terminalOutput">
+Moreno OS Terminal [Version 1.0.0]
+
+Digite "help" para ver os comandos disponíveis.
+
+            </div>
+
+                <div class="terminal-line">
+
+                    <span>Moreno@OS:~$</span>
+
+                    <input
+                        id="terminalInput"
+                        class="terminal-input"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- BROWSER -->
+    <div class="window" id="window-browser">
+
+        <div class="titlebar">
+
+            <div class="title">🌐 Moreno Browser</div>
+
+            <div class="window-buttons">
+                <button class="minimize">−</button>
+                <button class="maximize">□</button>
+                <button class="close">×</button>
+            </div>
+
+        </div>
+
+        <div class="window-content browser">
+
+            <div class="browser-toolbar">
+
+                <button id="browserBack">←</button>
+                <button id="browserForward">→</button>
+                <button id="browserReload">⟳</button>
+
+                <input
+                    id="browserAddress"
+                    value="moreno://home"
+                >
+
+                <button id="browserGo">Ir</button>
+
+            </div>
+
+            <div class="browser-page" id="browserPage"></div>
+
+        </div>
+
+    </div>
+
+    <!-- CALCULATOR -->
+    <div class="window" id="window-calculator">
+
+        <div class="titlebar">
+
+            <div class="title">🧮 Calculadora</div>
+
+            <div class="window-buttons">
+                <button class="minimize">−</button>
+                <button class="maximize">□</button>
+                <button class="close">×</button>
+            </div>
+
+        </div>
+
+        <div class="window-content">
+
+            <div class="calculator">
+
+                <input id="calcDisplay" class="calc-display" readonly>
+
+                <div class="calc-buttons">
+
+                    <button onclick="calcClear()">C</button>
+                    <button onclick="calcBackspace()">⌫</button>
+                    <button onclick="calcAdd('(')">(</button>
+                    <button onclick="calcAdd(')')">)</button>
+
+                    <button onclick="calcAdd('7')">7</button>
+                    <button onclick="calcAdd('8')">8</button>
+                    <button onclick="calcAdd('9')">9</button>
+                    <button class="operator" onclick="calcAdd('/')">÷</button>
+
+                    <button onclick="calcAdd('4')">4</button>
+                    <button onclick="calcAdd('5')">5</button>
+                    <button onclick="calcAdd('6')">6</button>
+                    <button class="operator" onclick="calcAdd('*')">×</button>
+
+                    <button onclick="calcAdd('1')">1</button>
+                    <button onclick="calcAdd('2')">2</button>
+                    <button onclick="calcAdd('3')">3</button>
+                    <button class="operator" onclick="calcAdd('-')">−</button>
+
+                    <button onclick="calcAdd('0')">0</button>
+                    <button onclick="calcAdd('.')">.</button>
+                    <button onclick="calcResult()">=</button>
+                    <button class="operator" onclick="calcAdd('+')">+</button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- NOTES -->
+    <div class="window" id="window-notes">
+
+        <div class="titlebar">
+
+            <div class="title">📝 Notas</div>
+
+            <div class="window-buttons">
+                <button class="minimize">−</button>
+                <button class="maximize">□</button>
+                <button class="close">×</button>
+            </div>
+
+        </div>
+
+        <div class="window-content">
+
+            <div class="notes">
+
+                <textarea id="notesText" placeholder="Escreva suas notas..."></textarea>
+
+                <button class="small-button" onclick="saveNotes()">
+                    Salvar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MONITOR -->
+    <div class="window" id="window-monitor">
+
+        <div class="titlebar">
+
+            <div class="title">📊 Monitor do Sistema</div>
+
+            <div class="window-buttons">
+                <button class="minimize">−</button>
+                <button class="maximize">□</button>
+                <button class="close">×</button>
+            </div>
+
+        </div>
+
+        <div class="window-content">
+
+            <div class="monitor">
+
+                <h2>Moreno System Monitor</h2>
+
+                <div class="stats-grid">
+
+                    <div class="stat">
+                        CPU
+                        <div class="stat-value" id="cpuValue">23%</div>
+                        <div class="progress">
+                            <div id="cpuBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat">
+                        RAM
+                        <div class="stat-value" id="ramValue">41%</div>
+                        <div class="progress">
+                            <div id="ramBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat">
+                        DISK
+                        <div class="stat-value" id="diskValue">37%</div>
+                        <div class="progress">
+                            <div id="diskBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat">
+                        Processos
+                        <div class="stat-value" id="processValue">48</div>
+                    </div>
+
+                    <div class="stat">
+                        Threads
+                        <div class="stat-value" id="threadValue">214</div>
+                    </div>
+
+                    <div class="stat">
+                        Uptime
+                        <div class="stat-value" id="uptimeValue">00:00:00</div>
+                    </div>
+
+                </div>
+
+                <table class="process-table">
+
+                    <thead>
+                        <tr>
+                            <th>Processo</th>
+                            <th>CPU</th>
+                            <th>RAM</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="processTable">
+
+                        <tr>
+                            <td>moreno-shell</td>
+                            <td>3.2%</td>
+                            <td>42 MB</td>
+                            <td>Running</td>
+                        </tr>
+
+                        <tr>
+                            <td>moreno-ui</td>
+                            <td>1.8%</td>
+                            <td>67 MB</td>
+                            <td>Running</td>
+                        </tr>
+
+                        <tr>
+                            <td>system-service</td>
+                            <td>0.7%</td>
+                            <td>31 MB</td>
+                            <td>Running</td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="window" id="window-settings">
+
+        <div class="titlebar">
+
+            <div class="title">⚙️ Configurações</div>
+
+            <div class="window-buttons">
+                <button class="minimize">−</button>
+                <button class="maximize">□</button>
+                <button class="close">×</button>
+            </div>
+
+        </div>
+
+        <div class="window-content">
+
+            <div class="settings">
+
+                <div class="setting-section">
+
+                    <h2>Personalização</h2>
+
+                    <p>Papel de parede</p>
+
+                    <div class="wallpapers">
+
+                        <div class="wallpaper-choice w1" onclick="changeWallpaper(1)"></div>
+                        <div class="wallpaper-choice w2" onclick="changeWallpaper(2)"></div>
+                        <div class="wallpaper-choice w3" onclick="changeWallpaper(3)"></div>
+                        <div class="wallpaper-choice w4" onclick="changeWallpaper(4)"></div>
+                        <div class="wallpaper-choice w5" onclick="changeWallpaper(5)"></div>
+
+                    </div>
+
+                </div>
+
+                <div class="setting-section">
+
+                    <h2>Sistema</h2>
+
+                    <p>Nome do sistema: Moreno OS</p>
+                    <p>Versão: 1.0.0</p>
+                    <p>Arquitetura: Moreno Virtual x64</p>
+                    <p id="languageInfo"></p>
+
+                </div>
+
+                <div class="setting-section">
+
+                    <h2>Sessão</h2>
+
+                    <button class="small-button" onclick="lockComputer()">
+                        Bloquear computador
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TRASH -->
+    <div class="window" id="window-trash">
+
+        <div class="titlebar">
+
+            <div class="title">🗑️ Lixeira</div>
+
+            <div class="window-buttons">
+                <button class="minimize">−</button>
+                <button class="maximize">□</button>
+                <button class="close">×</button>
+            </div>
+
+        </div>
+
+        <div class="window-content">
+
+            <div class="trash">
+
+                <div class="empty-trash">
+                    🗑️<br><br>
+                    A lixeira está vazia.
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TASKBAR -->
+    <div id="taskbar">
+
+        <button id="startButton">◈</button>
+
+        <div id="taskApps"></div>
+
+        <div id="clock"></div>
+
+    </div>
+
+    <!-- CONTEXT MENU -->
+    <div id="contextMenu">
+
+        <div class="context-item" onclick="openApp('explorer')">
+            📁 Abrir arquivos
+        </div>
+
+        <div class="context-item" onclick="openApp('terminal')">
+            ▣ Abrir terminal
+        </div>
+
+        <div class="context-item" onclick="refreshDesktop()">
+            ⟳ Atualizar
+        </div>
+
+        <div class="context-item" onclick="changeWallpaper(Math.floor(Math.random()*5)+1)">
+            🎨 Alterar papel de parede
+        </div>
+
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div id="notifications"></div>
+
+    <!-- LOCK SCREEN -->
+    <div id="lockScreen">
+
+        <div class="lock-logo">MORENO OS</div>
+
+        <div class="lock-time" id="lockTime">
+            00:00
+        </div>
+
+        <button id="unlockButton">
+            Desbloquear
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+/* =========================================================
+   IDIOMA AUTOMÁTICO
+========================================================= */
+
+const browserLanguage = (navigator.language || "en").toLowerCase();
+
+let currentLanguage = "en";
+
+if(browserLanguage.startsWith("pt")){
+    currentLanguage = "pt";
+}
+else if(browserLanguage.startsWith("es")){
+    currentLanguage = "es";
+}
+else{
+    currentLanguage = "en";
+}
+
+const translations = {
+
+    pt:{
+        files:"Arquivos",
+        terminal:"Terminal",
+        browser:"Navegador",
+        calculator:"Calculadora",
+        notes:"Notas",
+        monitor:"Monitor",
+        settings:"Configurações",
+        trash:"Lixeira"
+    },
+
+    es:{
+        files:"Archivos",
+        terminal:"Terminal",
+        browser:"Navegador",
+        calculator:"Calculadora",
+        notes:"Notas",
+        monitor:"Monitor",
+        settings:"Configuración",
+        trash:"Papelera"
+    },
+
+    en:{
+        files:"Files",
+        terminal:"Terminal",
+        browser:"Browser",
+        calculator:"Calculator",
+        notes:"Notes",
+        monitor:"System Monitor",
+        settings:"Settings",
+        trash:"Recycle Bin"
+    }
+
+};
+
+function applyLanguage(){
+
+    document.querySelectorAll("[data-i18n]").forEach(element=>{
+
+        const key = element.dataset.i18n;
+
+        if(translations[currentLanguage][key]){
+            element.textContent = translations[currentLanguage][key];
+        }
+
+    });
+
+    const languageNames = {
+        pt:"Português",
+        es:"Español",
+        en:"English"
+    };
+
+    document.getElementById("languageInfo").textContent =
+        "Idioma detectado: " + languageNames[currentLanguage];
+
+}
+
+applyLanguage();
+
+
+/* =========================================================
+   JANELAS
+========================================================= */
+
+let zIndex = 10;
+
+const appNames = {
+
+    explorer:"📁 Arquivos",
+    terminal:"▣ Terminal",
+    browser:"🌐 Moreno Browser",
+    calculator:"🧮 Calculadora",
+    notes:"📝 Notas",
+    monitor:"📊 Monitor do Sistema",
+    settings:"⚙️ Configurações",
+    trash:"🗑️ Lixeira"
+
+};
+
+function openApp(app){
+
+    const win = document.getElementById("window-" + app);
+
+    if(!win) return;
+
+    win.classList.add("active");
+
+    zIndex++;
+
+    win.style.zIndex = zIndex;
+
+    createTaskButton(app);
+
+    document.getElementById("startMenu").classList.remove("open");
+
+    if(app === "terminal"){
+        setTimeout(()=>{
+            document.getElementById("terminalInput").focus();
+        },100);
+    }
+
+    if(app === "notes"){
+        document.getElementById("notesText").value =
+            localStorage.getItem("morenoNotes") || "";
+    }
+
+    if(app === "browser"){
+        renderBrowser("moreno://home");
+    }
+
+}
+
+function closeApp(app){
+
+    const win = document.getElementById("window-" + app);
+
+    if(!win) return;
+
+    win.classList.remove("active");
+
+    const task = document.querySelector(
+        `.task-app[data-app="${app}"]`
+    );
+
+    if(task) task.remove();
+
+}
+
+function createTaskButton(app){
+
+    if(document.querySelector(`.task-app[data-app="${app}"]`))
+        return;
+
+    const button = document.createElement("button");
+
+    button.className = "task-app";
+    button.dataset.app = app;
+    button.textContent = appNames[app];
+
+    button.onclick = ()=>{
+
+        const win = document.getElementById("window-" + app);
+
+        if(win.classList.contains("active")){
+
+            if(win.style.zIndex == zIndex){
+                win.classList.remove("active");
+            }
+            else{
+                zIndex++;
+                win.style.zIndex = zIndex;
+            }
+
+        }
+        else{
+            win.classList.add("active");
+            zIndex++;
+            win.style.zIndex = zIndex;
+        }
+
+    };
+
+    document.getElementById("taskApps").appendChild(button);
+
+}
+
+
+/* =========================================================
+   BOTÕES DAS JANELAS
+========================================================= */
+
+document.querySelectorAll(".window").forEach(win=>{
+
+    const app = win.id.replace("window-","");
+
+    win.addEventListener("pointerdown",()=>{
+
+        zIndex++;
+        win.style.zIndex = zIndex;
+
+    });
+
+    win.querySelector(".close").onclick = e=>{
+
+        e.stopPropagation();
+
+        closeApp(app);
+
+    };
+
+    win.querySelector(".minimize").onclick = e=>{
+
+        e.stopPropagation();
+
+        win.classList.remove("active");
+
+    };
+
+    win.querySelector(".maximize").onclick = e=>{
+
+        e.stopPropagation();
+
+        const maximized =
+            win.dataset.maximized === "true";
+
+        if(maximized){
+
+            win.dataset.maximized = "false";
+            win.classList.remove("maximized");
+
+        }
+        else{
+
+            win.dataset.maximized = "true";
+            win.classList.add("maximized");
+
+        }
+
+    };
+
+});
+
+
+/* =========================================================
+   DRAG DAS JANELAS
+========================================================= */
+
+document.querySelectorAll(".window").forEach(win=>{
+
+    const titlebar = win.querySelector(".titlebar");
+
+    let dragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+    let pointerId = null;
+
+    titlebar.addEventListener("pointerdown",e=>{
+
+        if(e.target.closest("button"))
+            return;
+
+        if(win.dataset.maximized === "true")
+            return;
+
+        dragging = true;
+        pointerId = e.pointerId;
+
+        offsetX =
+            e.clientX - win.offsetLeft;
+
+        offsetY =
+            e.clientY - win.offsetTop;
+
+        zIndex++;
+
+        win.style.zIndex = zIndex;
+
+        try{
+            titlebar.setPointerCapture(pointerId);
+        }catch(err){}
+
+        e.preventDefault();
+
+    });
+
+    titlebar.addEventListener("pointermove",e=>{
+
+        if(!dragging)
+            return;
+
+        let x =
+            e.clientX - offsetX;
+
+        let y =
+            e.clientY - offsetY;
+
+        const maxX =
+            Math.max(0,
+                window.innerWidth -
+                win.offsetWidth
+            );
+
+        const maxY =
+            Math.max(0,
+                window.innerHeight -
+                58 -
+                win.offsetHeight
+            );
+
+        x =
+            Math.max(0,
+                Math.min(maxX,x)
+            );
+
+        y =
+            Math.max(0,
+                Math.min(maxY,y)
+            );
+
+        win.style.left = x + "px";
+        win.style.top = y + "px";
+
+    });
+
+    function stopDragging(){
+
+        dragging = false;
+
+        if(pointerId !== null){
+
+            try{
+                titlebar.releasePointerCapture(pointerId);
+            }catch(err){}
+
+        }
+
+        pointerId = null;
+
+    }
+
+    window.addEventListener("pointerup",stopDragging);
+    window.addEventListener("pointercancel",stopDragging);
+
+    titlebar.addEventListener("lostpointercapture",stopDragging);
+
+});
+
+
+/* =========================================================
+   START MENU
+========================================================= */
+
+document.getElementById("startButton").onclick = e=>{
+
+    e.stopPropagation();
+
+    document
+        .getElementById("startMenu")
+        .classList.toggle("open");
+
+};
+
+document.querySelectorAll(".app-button").forEach(button=>{
+
+    button.onclick = ()=>{
+
+        openApp(button.dataset.app);
+
+    };
+
+});
+
+document.addEventListener("click",e=>{
+
+    const menu =
+        document.getElementById("startMenu");
+
+    if(
+        !menu.contains(e.target) &&
+        e.target.id !== "startButton"
+    ){
+        menu.classList.remove("open");
+    }
+
+});
+
+
+/* =========================================================
+   PESQUISA DE APLICATIVOS
+========================================================= */
+
+document.getElementById("appSearch").addEventListener(
+    "input",
+    function(){
+
+        const search =
+            this.value.toLowerCase();
+
+        document.querySelectorAll(".app-button")
+            .forEach(button=>{
+
+                const text =
+                    button.innerText.toLowerCase();
+
+                button.style.display =
+                    text.includes(search)
+                    ? "flex"
+                    : "none";
+
+            });
+
+    }
+);
+
+
+/* =========================================================
+   RELÓGIO
+========================================================= */
+
+function updateClock(){
+
+    const now = new Date();
+
+    const time =
+        now.toLocaleTimeString(
+            currentLanguage === "pt"
+                ? "pt-BR"
+                : currentLanguage === "es"
+                    ? "es-ES"
+                    : "en-US",
+            {
+                hour:"2-digit",
+                minute:"2-digit",
+                second:"2-digit"
+            }
+        );
+
+    const date =
+        now.toLocaleDateString(
+            currentLanguage === "pt"
+                ? "pt-BR"
+                : currentLanguage === "es"
+                    ? "es-ES"
+                    : "en-US"
+        );
+
+    document.getElementById("clock").innerHTML =
+        time + "<br>" + date;
+
+    document.getElementById("lockTime").textContent =
+        now.toLocaleTimeString(
+            currentLanguage === "pt"
+                ? "pt-BR"
+                : currentLanguage === "es"
+                    ? "es-ES"
+                    : "en-US",
+            {
+                hour:"2-digit",
+                minute:"2-digit"
+            }
+        );
+
+}
+
+setInterval(updateClock,1000);
+
+updateClock();
+
+
+/* =========================================================
+   CALCULADORA
+========================================================= */
+
+function calcAdd(value){
+
+    document.getElementById("calcDisplay").value += value;
+
+}
+
+function calcClear(){
+
+    document.getElementById("calcDisplay").value = "";
+
+}
+
+function calcBackspace(){
+
+    const display =
+        document.getElementById("calcDisplay");
+
+    display.value =
+        display.value.slice(0,-1);
+
+}
+
+function calcResult(){
+
+    const display =
+        document.getElementById("calcDisplay");
+
+    try{
+
+        if(!/^[0-9+\-*/().\s]+$/.test(display.value))
+            throw new Error();
+
+        display.value =
+            Function(
+                '"use strict";return (' +
+                display.value +
+                ')'
+            )();
+
+    }
+    catch{
+
+        display.value = "Erro";
+
+    }
+
+}
+
+
+/* =========================================================
+   NOTAS
+========================================================= */
+
+function saveNotes(){
+
+    const text =
+        document.getElementById("notesText").value;
+
+    localStorage.setItem(
+        "morenoNotes",
+        text
+    );
+
+    notify(
+        currentLanguage === "pt"
+            ? "Notas salvas."
+            : currentLanguage === "es"
+                ? "Notas guardadas."
+                : "Notes saved."
+    );
+
+}
+
+
+/* =========================================================
+   TERMINAL
+========================================================= */
+
+const terminalInput =
+    document.getElementById("terminalInput");
+
+const terminalOutput =
+    document.getElementById("terminalOutput");
+
+terminalInput.addEventListener("keydown",e=>{
+
+    if(e.key !== "Enter")
+        return;
+
+    const command =
+        terminalInput.value.trim();
+
+    terminalInput.value = "";
+
+    terminalOutput.textContent +=
+        "\nMoreno@OS:~$ " +
+        command +
+        "\n";
+
+    executeCommand(command);
+
+    terminalOutput.scrollTop =
+        terminalOutput.scrollHeight;
+
+});
+
+function terminalPrint(text){
+
+    terminalOutput.textContent +=
+        text + "\n";
+
+}
+
+function executeCommand(command){
+
+    const parts =
+        command.split(" ");
+
+    const cmd =
+        parts[0].toLowerCase();
+
+    const args =
+        parts.slice(1).join(" ");
+
+    switch(cmd){
+
+        case "":
+            break;
+
+        case "help":
+
+            terminalPrint(
+`Comandos disponíveis:
+
+help          mostra esta ajuda
+clear         limpa o terminal
+date          mostra a data
+time          mostra a hora
+whoami        usuário atual
+pwd           diretório atual
+ls            lista arquivos
+dir           lista arquivos
+systeminfo    informações do sistema
+version       versão do Moreno OS
+open          abre aplicativos
+echo          mostra uma mensagem
+calc          calcula uma expressão
+processes     mostra processos
+neofetch      informações visuais
+shutdown      simula desligamento
+reboot        simula reinicialização`
+            );
+
+            break;
+
+        case "clear":
+
+            terminalOutput.textContent = "";
+
+            break;
+
+        case "date":
+
+            terminalPrint(
+                new Date().toLocaleDateString()
+            );
+
+            break;
+
+        case "time":
+
+            terminalPrint(
+                new Date().toLocaleTimeString()
+            );
+
+            break;
+
+        case "whoami":
+
+            terminalPrint("Moreno");
+
+            break;
+
+        case "pwd":
+
+            terminalPrint(
+                "C:\\Users\\Moreno"
+            );
+
+            break;
+
+        case "ls":
+        case "dir":
+
+            terminalPrint(
+`Documents/
+Downloads/
+Pictures/
+Projects/
+README.txt
+config.moreno
+system.dll
+backup.mor`
+            );
+
+            break;
+
+        case "systeminfo":
+
+            terminalPrint(
+`Moreno OS
+Version: 1.0.0
+Architecture: x64
+Kernel: MorenoKernel 1.0
+CPU: Virtual Processor
+Memory: 8 GB Virtual RAM
+GPU: Virtual Graphics
+Network: Connected
+Browser: Moreno Browser`
+            );
+
+            break;
+
+        case "version":
+
+            terminalPrint(
+                "Moreno OS version 1.0.0"
+            );
+
+            break;
+
+        case "open":
+
+            if(args === "explorer")
+                openApp("explorer");
+
+            else if(args === "browser")
+                openApp("browser");
+
+            else if(args === "calculator")
+                openApp("calculator");
+
+            else if(args === "notes")
+                openApp("notes");
+
+            else if(args === "monitor")
+                openApp("monitor");
+
+            else if(args === "settings")
+                openApp("settings");
+
+            else
+                terminalPrint(
+                    "Aplicativo não encontrado."
+                );
+
+            break;
+
+        case "echo":
+
+            terminalPrint(args);
+
+            break;
+
+        case "calc":
+
+            try{
+
+                if(!/^[0-9+\-*/().\s]+$/.test(args))
+                    throw new Error();
+
+                terminalPrint(
+                    String(
+                        Function(
+                            '"use strict";return (' +
+                            args +
+                            ')'
+                        )()
+                    )
+                );
+
+            }
+            catch{
+
+                terminalPrint("Expressão inválida.");
+
+            }
+
+            break;
+
+        case "processes":
+
+            terminalPrint(
+`PID     PROCESS
+001     moreno-shell
+002     moreno-ui
+003     system-service
+004     network-service
+005     window-manager
+006     browser-engine`
+            );
+
+            break;
+
+        case "neofetch":
+
+            terminalPrint(
+`
+       ██████╗ ███████╗
+      ██╔═══██╗██╔════╝
+      ██║   ██║███████╗
+      ██║   ██║╚════██║
+      ╚██████╔╝███████║
+       ╚═════╝ ╚══════╝
+
+OS: Moreno OS
+Kernel: MorenoKernel 1.0
+Shell: MorenoShell
+Resolution: ${window.innerWidth}x${window.innerHeight}
+Language: ${currentLanguage}
+`
+            );
+
+            break;
+
+        case "shutdown":
+
+            terminalPrint(
+                "Sistema desligando..."
+            );
+
+            setTimeout(
+                ()=>lockComputer(),
+                1000
+            );
+
+            break;
+
+        case "reboot":
+
+            terminalPrint(
+                "Reiniciando Moreno OS..."
+            );
+
+            setTimeout(
+                ()=>location.reload(),
+                1000
+            );
+
+            break;
+
+        default:
+
+            terminalPrint(
+                `'${cmd}' não é reconhecido como comando.`
+            );
+
+    }
+
+}
+
+
+/* =========================================================
+   BROWSER
+========================================================= */
+
+let browserHistory = ["moreno://home"];
+let browserHistoryIndex = 0;
+
+function renderBrowser(url){
+
+    const page =
+        document.getElementById("browserPage");
+
+    document.getElementById(
+        "browserAddress"
+    ).value = url;
+
+    if(url === "moreno://home"){
+
+        page.innerHTML = `
+            <div class="browser-home">
+
+                <h1>Moreno Browser</h1>
+
+                <p>Bem-vindo ao navegador virtual do Moreno OS.</p>
+
+                <div class="browser-card"
+                    onclick="renderBrowser('moreno://apps')">
+                    <h3>Aplicativos</h3>
+                    <p>Explore os programas instalados.</p>
+                </div>
+
+                <div class="browser-card"
+                    onclick="renderBrowser('moreno://system')">
+                    <h3>Sistema</h3>
+                    <p>Informações do sistema.</p>
+                </div>
+
+                <div class="browser-card"
+                    onclick="renderBrowser('moreno://about')">
+                    <h3>Sobre</h3>
+                    <p>Sobre o Moreno OS.</p>
+                </div>
+
+            </div>
+        `;
+
+    }
+
+    else if(url === "moreno://apps"){
+
+        page.innerHTML = `
+            <h1>Aplicativos</h1>
+            <p>Aplicativos disponíveis no sistema:</p>
+            <ul>
+                <li>Arquivos</li>
+                <li>Terminal</li>
+                <li>Calculadora</li>
+                <li>Notas</li>
+                <li>Monitor do Sistema</li>
+                <li>Configurações</li>
+            </ul>
+        `;
+
+    }
+
+    else if(url === "moreno://system"){
+
+        page.innerHTML = `
+            <h1>Moreno OS</h1>
+            <p><b>Versão:</b> 1.0.0</p>
+            <p><b>Kernel:</b> MorenoKernel 1.0</p>
+            <p><b>Arquitetura:</b> x64</p>
+            <p><b>Processador:</b> Virtual Processor</p>
+            <p><b>Memória:</b> 8 GB Virtual RAM</p>
+        `;
+
+    }
+
+    else if(url === "moreno://about"){
+
+        page.innerHTML = `
+            <h1>Sobre o Moreno OS</h1>
+            <p>Um sistema operacional virtual criado em HTML, CSS e JavaScript.</p>
+            <p>Não possui acesso real aos arquivos ou hardware do computador.</p>
+        `;
+
+    }
+
+    else{
+
+        page.innerHTML = `
+            <h1>Site não encontrado</h1>
+            <p>O endereço <b>${escapeHTML(url)}</b> não existe no Moreno Browser.</p>
+        `;
+
+    }
+
+}
+
+function escapeHTML(text){
+
+    return text
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;");
+
+}
+
+function browserNavigate(){
+
+    let url =
+        document.getElementById(
+            "browserAddress"
+        ).value.trim();
+
+    if(!url)
+        return;
+
+    if(
+        !url.startsWith("moreno://")
+    ){
+        url = "moreno://home";
+    }
+
+    browserHistory =
+        browserHistory.slice(
+            0,
+            browserHistoryIndex + 1
+        );
+
+    browserHistory.push(url);
+
+    browserHistoryIndex++;
+
+    renderBrowser(url);
+
+}
+
+document.getElementById("browserGo")
+    .onclick = browserNavigate;
+
+document.getElementById("browserAddress")
+    .addEventListener(
+        "keydown",
+        e=>{
+            if(e.key === "Enter")
+                browserNavigate();
+        }
+    );
+
+document.getElementById("browserBack")
+    .onclick = ()=>{
+
+        if(browserHistoryIndex > 0){
+
+            browserHistoryIndex--;
+
+            renderBrowser(
+                browserHistory[
+                    browserHistoryIndex
+                ]
+            );
+
+        }
+
+    };
+
+document.getElementById("browserForward")
+    .onclick = ()=>{
+
+        if(
+            browserHistoryIndex <
+            browserHistory.length - 1
+        ){
+
+            browserHistoryIndex++;
+
+            renderBrowser(
+                browserHistory[
+                    browserHistoryIndex
+                ]
+            );
+
+        }
+
+    };
+
+document.getElementById("browserReload")
+    .onclick = ()=>{
+
+        renderBrowser(
+            browserHistory[
+                browserHistoryIndex
+            ]
+        );
+
+    };
+
+renderBrowser("moreno://home");
+
+
+/* =========================================================
+   MONITOR DO SISTEMA
+========================================================= */
+
+let systemStart =
+    Date.now();
+
+function updateMonitor(){
+
+    const cpu =
+        Math.floor(
+            15 + Math.random()*65
+        );
+
+    const ram =
+        Math.floor(
+            30 + Math.random()*45
+        );
+
+    const disk =
+        Math.floor(
+            25 + Math.random()*30
+        );
+
+    document.getElementById("cpuValue")
+        .textContent = cpu + "%";
+
+    document.getElementById("ramValue")
+        .textContent = ram + "%";
+
+    document.getElementById("diskValue")
+        .textContent = disk + "%";
+
+    document.getElementById("cpuBar")
+        .style.width = cpu + "%";
+
+    document.getElementById("ramBar")
+        .style.width = ram + "%";
+
+    document.getElementById("diskBar")
+        .style.width = disk + "%";
+
+    document.getElementById("processValue")
+        .textContent =
+        Math.floor(40 + Math.random()*15);
+
+    document.getElementById("threadValue")
+        .textContent =
+        Math.floor(180 + Math.random()*80);
+
+    const elapsed =
+        Math.floor(
+            (Date.now()-systemStart)/1000
+        );
+
+    const hours =
+        String(
+            Math.floor(elapsed/3600)
+        ).padStart(2,"0");
+
+    const minutes =
+        String(
+            Math.floor((elapsed%3600)/60)
+        ).padStart(2,"0");
+
+    const seconds =
+        String(
+            elapsed%60
+        ).padStart(2,"0");
+
+    document.getElementById(
+        "uptimeValue"
+    ).textContent =
+        `${hours}:${minutes}:${seconds}`;
+
+}
+
+setInterval(updateMonitor,1000);
+
+updateMonitor();
+
+
+/* =========================================================
+   PAPEL DE PAREDE
+========================================================= */
+
+function changeWallpaper(number){
+
+    const desktop =
+        document.getElementById("desktop");
+
+    const wallpapers = {
+
+        1:
+        `radial-gradient(circle at 20% 20%,rgba(120,100,255,.20),transparent 35%),radial-gradient(circle at 80% 70%,rgba(0,180,255,.13),transparent 35%),linear-gradient(135deg,#090b13,#151525 50%,#08090e)`,
+
+        2:
+        `radial-gradient(circle at 20% 20%,rgba(255,50,50,.18),transparent 35%),linear-gradient(135deg,#120606,#351010,#08090e)`,
+
+        3:
+        `radial-gradient(circle at 20% 20%,rgba(0,255,230,.15),transparent 35%),linear-gradient(135deg,#031012,#0b3036,#05090a)`,
+
+        4:
+        `radial-gradient(circle at 80% 20%,rgba(255,180,50,.16),transparent 35%),linear-gradient(135deg,#110a03,#3c2610,#080705)`,
+
+        5:
+        `radial-gradient(circle at 50% 20%,rgba(220,80,255,.18),transparent 35%),linear-gradient(135deg,#0e0315,#321144,#08040b)`
+
+    };
+
+    desktop.style.background =
+        wallpapers[number];
+
+    localStorage.setItem(
+        "morenoWallpaper",
+        number
+    );
+
+}
+
+const savedWallpaper =
+    localStorage.getItem(
+        "morenoWallpaper"
+    );
+
+if(savedWallpaper)
+    changeWallpaper(savedWallpaper);
+
+
+/* =========================================================
+   MENU DE CONTEXTO
+========================================================= */
+
+document.getElementById("desktop")
+    .addEventListener(
+        "contextmenu",
+        e=>{
+
+            if(
+                e.target.closest(".window") ||
+                e.target.closest("#taskbar") ||
+                e.target.closest("#startMenu")
+            )
+                return;
+
+            e.preventDefault();
+
+            const menu =
+                document.getElementById(
+                    "contextMenu"
+                );
+
+            menu.style.display = "block";
+
+            let x = e.clientX;
+            let y = e.clientY;
+
+            if(
+                x + 210 >
+                window.innerWidth
+            )
+                x =
+                    window.innerWidth - 215;
+
+            if(
+                y + 170 >
+                window.innerHeight
+            )
+                y =
+                    window.innerHeight - 175;
+
+            menu.style.left = x + "px";
+            menu.style.top = y + "px";
+
+        }
+    );
+
+document.addEventListener(
+    "click",
+    ()=>{
+        document.getElementById(
+            "contextMenu"
+        ).style.display = "none";
+    }
+);
+
+function refreshDesktop(){
+
+    notify(
+        currentLanguage === "pt"
+            ? "Área de trabalho atualizada."
+            : currentLanguage === "es"
+                ? "Escritorio actualizado."
+                : "Desktop refreshed."
+    );
+
+}
+
+
+/* =========================================================
+   NOTIFICAÇÕES
+========================================================= */
+
+function notify(message){
+
+    const container =
+        document.getElementById(
+            "notifications"
+        );
+
+    const notification =
+        document.createElement("div");
+
+    notification.className =
+        "notification";
+
+    notification.textContent =
+        message;
+
+    container.appendChild(
+        notification
+    );
+
+    setTimeout(()=>{
+
+        notification.remove();
+
+    },3000);
+
+}
+
+
+/* =========================================================
+   LOCK SCREEN
+========================================================= */
+
+function lockComputer(){
+
+    document.getElementById(
+        "lockScreen"
+    ).classList.add("show");
+
+}
+
+document.getElementById(
+    "unlockButton"
+).onclick = ()=>{
+
+    document.getElementById(
+        "lockScreen"
+    ).classList.remove("show");
+
+};
+
+document.addEventListener(
+    "keydown",
+    e=>{
+
+        if(
+            e.ctrlKey &&
+            e.altKey &&
+            e.key.toLowerCase() === "t"
+        ){
+
+            e.preventDefault();
+
+            openApp("terminal");
+
+        }
+
+        if(
+            e.key === "Escape" &&
+            document.getElementById(
+                "lockScreen"
+            ).classList.contains("show")
+        ){
+
+            document.getElementById(
+                "lockScreen"
+            ).classList.remove("show");
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   INICIALIZAÇÃO
+========================================================= */
+
+setTimeout(()=>{
+
+    notify(
+        currentLanguage === "pt"
+            ? "Moreno OS iniciado."
+            : currentLanguage === "es"
+                ? "Moreno OS iniciado."
+                : "Moreno OS started."
+    );
+
+},500);
+
+</script>
+
+</body>
+</html>

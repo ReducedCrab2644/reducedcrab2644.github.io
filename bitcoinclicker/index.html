@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>₿ Bitcoin Clicker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="game">
+
+        <header>
+            <div>
+                <h1>₿ Bitcoin Clicker</h1>
+                <p>Mine satoshis e fique cada vez mais rico.</p>
+            </div>
+
+            <button id="resetBtn" class="reset">Resetar</button>
+        </header>
+
+        <section class="stats">
+
+            <div class="stat">
+                <span>💰 Saldo</span>
+                <strong id="balance">0 sats</strong>
+            </div>
+
+            <div class="stat">
+                <span>⭐ Nível</span>
+                <strong id="level">1</strong>
+            </div>
+
+            <div class="stat">
+                <span>⚡ Por clique</span>
+                <strong id="perClick">1 sat</strong>
+            </div>
+
+            <div class="stat">
+                <span>⛏️ Auto-mineração</span>
+                <strong id="autoMine">0/s</strong>
+            </div>
+
+        </section>
+
+        <section class="miner">
+
+            <div class="level-info">
+                <span>XP</span>
+                <span id="xpText">0 / 100</span>
+            </div>
+
+            <div class="xp-bar">
+                <div id="xpBar"></div>
+            </div>
+
+            <button id="mineBtn" class="bitcoin-button">
+                ₿
+                <small>MINERAR</small>
+            </button>
+
+            <p>Clique no Bitcoin para ganhar satoshis</p>
+
+        </section>
+
+        <section class="panels">
+
+            <div class="panel">
+                <h2>⚡ Upgrades</h2>
+
+                <div class="upgrade">
+                    <div>
+                        <h3>💪 Poder de mineração</h3>
+                        <p>Aumenta os satoshis por clique.</p>
+                    </div>
+
+                    <button id="clickUpgrade">
+                        <span id="clickUpgradePrice">50 sats</span>
+                        Comprar
+                    </button>
+                </div>
+
+                <div class="upgrade">
+                    <div>
+                        <h3>⛏️ Minerador automático</h3>
+                        <p>Gera satoshis automaticamente.</p>
+                    </div>
+
+                    <button id="autoUpgrade">
+                        <span id="autoUpgradePrice">100 sats</span>
+                        Comprar
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>📈 Mercado</h2>
+
+                <div class="market-price">
+                    <span>Preço fictício do Bitcoin</span>
+                    <strong id="btcPrice">R$ 350.000</strong>
+                </div>
+
+                <div class="market-change">
+                    <span>Variação</span>
+                    <strong id="marketChange">+0,00%</strong>
+                </div>
+
+                <div class="market-chart">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+
+        </section>
+
+        <footer>
+            <span>₿ Bitcoin Clicker</span>
+            <span>Salvamento automático ativado</span>
+        </footer>
+
+    </main>
+
+    <script src="script.js"></script>
+    <script src="language.js"></script>
+</body>
+</html>
